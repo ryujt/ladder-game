@@ -22,8 +22,18 @@ const Home = () => {
     
     try {
       setIsLoading(true);
-      const ladderId = await createLadder(formData.maxParticipants);
-      console.log('생성된 사다리 ID:', ladderId);
+      const result = await createLadder(formData.maxParticipants);
+      console.log('생성된 사다리 ID:', result);
+      
+      // 결과 처리 - 문자열 및 객체 형태 모두 지원
+      let ladderId;
+      if (typeof result === 'object' && result !== null) {
+        ladderId = result.ladderId;
+        console.log('객체에서 추출한 ID:', ladderId);
+      } else {
+        ladderId = result;
+        console.log('문자열 ID 사용:', ladderId);
+      }
       
       if (ladderId) {
         navigate(`/created/${ladderId}`);

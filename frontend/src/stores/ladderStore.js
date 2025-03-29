@@ -45,7 +45,7 @@ const useLadderStore = create(
                     });
                     
                     console.log('상태 업데이트 후:', { ladderId, maxParticipants });
-                    return { ladderId };
+                    return ladderId;
                 } catch (error) {
                     console.error('사다리 생성 에러 (스토어):', error);
                     set({ error: error.message || '사다리 생성 중 오류가 발생했습니다' });

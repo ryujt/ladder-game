@@ -14,7 +14,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/created/:ladderId" element={<LadderCreated />} />
-        <Route path="/:ladderId" element={<LadderJoin />} />
+        <Route path="/join/:ladderId" element={<LadderJoin />} />
         <Route path="/results/:id" element={<Results />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

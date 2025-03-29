@@ -166,15 +166,21 @@ function generateLadderResults(participants, maxParticipants) {
   
   // 참가자 수에 맞는 결과 배열 생성 (1부터 시작)
   const positions = Array.from({ length: maxParticipants }, (_, i) => i + 1);
+  // 결과 위치를 무작위로 섞기
   const shuffledPositions = shuffleArray([...positions]);
   console.log('섞인 위치:', shuffledPositions);
   
   // 각 참가자에게 랜덤 결과 할당
-  const results = participants.map(participant => ({
-    name: participant.name,
-    startPosition: participant.position,
-    endPosition: shuffledPositions[participant.position - 1]
-  }));
+  const results = participants.map(participant => {
+    // participant.position은 1부터 시작하므로 배열 인덱스로 사용시 -1 필요
+    const positionIndex = participant.position - 1;
+    return {
+      name: participant.name,
+      startPosition: participant.position,
+      // 시작 위치에 따라 섞인 결과 배열에서 할당
+      endPosition: shuffledPositions[positionIndex]
+    };
+  });
   
   console.log('생성된 결과:', results);
   return results;

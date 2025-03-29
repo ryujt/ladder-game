@@ -25,7 +25,7 @@ const LadderCreated = () => {
   }, [participants, navigate, ladderId]);
 
   // URL 생성 (사다리 ID가 있는 경우에만)
-  const joinUrl = ladderId ? `${window.location.origin}/${ladderId}` : '생성된 URL이 없습니다';
+  const joinUrl = ladderId ? `${window.location.origin}/join/${ladderId}` : '생성된 URL이 없습니다';
   console.log('생성된 joinUrl:', joinUrl);
 
   const copyToClipboard = () => {
@@ -99,7 +99,7 @@ const LadderCreated = () => {
           </button>
           
           <button
-            onClick={() => navigate(`/${ladderId}`)}
+            onClick={() => navigate(`/join/${ladderId}`)}
             disabled={!ladderId}
             className={`w-full font-medium py-2 px-4 rounded-md transition-colors ${
               !ladderId
