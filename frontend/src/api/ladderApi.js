@@ -2,7 +2,7 @@ import api from './index';
 
 // API 엔드포인트 URL
 export const API_ENDPOINTS = {
-  GENERATE_LADDER: 'https://7vwwrzdg6lgwbz44wuuuuvhxcu0xaejt.lambda-url.ap-northeast-2.on.aws/',
+  GENERATE_LADDER: 'https://fbkdixj4lh7nbrjh74j4golcau0wxjnk.lambda-url.ap-northeast-2.on.aws/',
   JOIN_LADDER: 'https://622jankfwxhpe3ow3xhzkc2y4i0eunzq.lambda-url.ap-northeast-2.on.aws/',
   GET_LADDER_RESULT: 'https://75bxl3tptvznaiiszx42wony5u0kkckg.lambda-url.ap-northeast-2.on.aws/'
 };

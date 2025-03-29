@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import useLadderStore from '../stores/ladderStore';
 import { useLoadingStore } from '../stores/loadingStore';
-import LoadingSpinner from '../components/LoadingSpinner';
 
 const Results = () => {
   const { id: ladderId } = useParams();
@@ -10,6 +9,7 @@ const Results = () => {
   const { checkResult, result, error, participants_joined } = useLadderStore();
   const { isLoading } = useLoadingStore();
   const [pollingActive, setPollingActive] = useState(false);
+  const [navigateLoading, setNavigateLoading] = useState(false);
   
   console.log('Results 페이지 렌더링:', { ladderId, result, participants: participants_joined?.length });
 
@@ -74,6 +74,7 @@ const Results = () => {
 
   const handleNewGame = () => {
     console.log('새 게임 시작하기 클릭');
+    setNavigateLoading(true);
     navigate('/');
   };
 
@@ -81,7 +82,6 @@ const Results = () => {
   if (!result && !error) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        {isLoading && <LoadingSpinner />}
         <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
           <h1 className="text-3xl font-bold text-blue-600 mb-4">결과 기다리는 중...</h1>
           <p className="text-gray-600 mb-6">
@@ -91,6 +91,12 @@ const Results = () => {
           <div className="animate-pulse flex justify-center">
             <div className="h-4 w-32 bg-blue-200 rounded"></div>
           </div>
+          
+          {isLoading && (
+            <div className="mt-4 text-sm text-blue-600">
+              데이터 업데이트 중...
+            </div>
+          )}
         </div>
       </div>
     );
@@ -105,9 +111,20 @@ const Results = () => {
           <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={handleNewGame}
-            className="bg-blue-600 text-white font-medium py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+            disabled={navigateLoading}
+            className="bg-blue-600 text-white font-medium py-2 px-4 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center mx-auto"
           >
-            새 게임 시작하기
+            {navigateLoading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                이동 중...
+              </>
+            ) : (
+              '새 게임 시작하기'
+            )}
           </button>
         </div>
       </div>
@@ -118,8 +135,6 @@ const Results = () => {
   console.log('결과 표시:', result);
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      {isLoading && <LoadingSpinner />}
-      
       <div className="bg-white rounded-lg shadow-md p-8 max-w-3xl w-full">
         <h1 className="text-3xl font-bold text-center text-blue-600 mb-8">사다리 결과</h1>
         
@@ -147,9 +162,20 @@ const Results = () => {
         <div className="flex justify-center">
           <button
             onClick={handleNewGame}
-            className="bg-blue-600 text-white font-medium py-2 px-6 rounded-md hover:bg-blue-700 transition-colors"
+            disabled={navigateLoading}
+            className="bg-blue-600 text-white font-medium py-2 px-6 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
           >
-            새 게임 시작하기
+            {navigateLoading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                이동 중...
+              </>
+            ) : (
+              '새 게임 시작하기'
+            )}
           </button>
         </div>
       </div>

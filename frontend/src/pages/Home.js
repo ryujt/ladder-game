@@ -1,80 +1,86 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useLadderStore from '../stores/ladderStore';
-import { useLoadingStore } from '../stores/loadingStore';
-import LoadingSpinner from '../components/LoadingSpinner';
 
 const Home = () => {
   const navigate = useNavigate();
   const { createLadder } = useLadderStore();
-  const { isLoading } = useLoadingStore();
-  const [maxParticipants, setMaxParticipants] = useState('');
-  const [error, setError] = useState('');
-
+  const [formData, setFormData] = useState({
+    maxParticipants: 2
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    const parsedValue = name === 'maxParticipants' ? parseInt(value, 10) : value;
+    setFormData(prev => ({ ...prev, [name]: parsedValue }));
+  };
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('사다리 생성 요청:', formData);
     
-    if (!maxParticipants || maxParticipants <= 1) {
-      setError('참여 인원은 2명 이상이어야 합니다');
-      return;
-    }
-
     try {
-      setError('');
-      console.log('사다리 생성 요청:', { maxParticipants: Number(maxParticipants) });
+      setIsLoading(true);
+      const ladderId = await createLadder(formData.maxParticipants);
+      console.log('생성된 사다리 ID:', ladderId);
       
-      const result = await createLadder(Number(maxParticipants));
-      console.log('사다리 생성 응답 (Home):', result);
-      
-      if (!result || !result.ladderId) {
-        console.error('올바른 응답 형식이 아님:', result);
-        setError('응답 형식이 올바르지 않습니다.');
-        return;
+      if (ladderId) {
+        navigate(`/created/${ladderId}`);
+      } else {
+        console.error('사다리 ID가 생성되지 않았습니다.');
+        setIsLoading(false);
       }
-      
-      console.log('사다리 생성 성공:', result.ladderId);
-      navigate(`/created/${result.ladderId}`);
-    } catch (err) {
-      console.error('사다리 생성 에러 (Home):', err);
-      setError(err.message || '사다리 생성 중 오류가 발생했습니다');
+    } catch (error) {
+      console.error('사다리 생성 오류:', error);
+      setIsLoading(false);
     }
   };
-
+  
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      {isLoading && <LoadingSpinner />}
-      
       <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full">
-        <h1 className="text-3xl font-bold text-center text-blue-600 mb-8">사다리 게임</h1>
+        <h1 className="text-3xl font-bold text-center text-blue-600 mb-8">사다리 게임 만들기</h1>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="maxParticipants" className="block text-gray-700 font-medium mb-2">
-              참여 인원 수
+            <label htmlFor="maxParticipants" className="block text-sm font-medium text-gray-700 mb-1">
+              참가자 수
             </label>
-            <input
-              type="number"
+            <select
               id="maxParticipants"
-              value={maxParticipants}
-              onChange={(e) => setMaxParticipants(e.target.value)}
-              min="2"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="참여할 인원 수를 입력하세요"
-            />
+              name="maxParticipants"
+              value={formData.maxParticipants}
+              onChange={handleChange}
+              className="w-full border-gray-300 border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            >
+              {[2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                <option key={num} value={num}>{num}명</option>
+              ))}
+            </select>
+            <p className="mt-1 text-sm text-gray-500">참가할 인원 수를 선택하세요</p>
           </div>
           
-          {error && (
-            <div className="text-red-500 text-sm">
-              {error}
-            </div>
-          )}
-          
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-          >
-            사다리 생성하기
-          </button>
+          <div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
+            >
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  생성 중...
+                </>
+              ) : (
+                '게임 생성하기'
+              )}
+            </button>
+          </div>
         </form>
       </div>
     </div>

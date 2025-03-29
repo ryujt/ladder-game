@@ -7,6 +7,7 @@ const LadderCreated = () => {
   const navigate = useNavigate();
   const { participants } = useLadderStore();
   const [copied, setCopied] = useState(false);
+  const [copyLoading, setCopyLoading] = useState(false);
   
   console.log('LadderCreated 렌더링:', { ladderId, participants });
 
@@ -33,12 +34,16 @@ const LadderCreated = () => {
       return;
     }
     
+    setCopyLoading(true);
+    
     navigator.clipboard.writeText(joinUrl).then(() => {
       console.log('클립보드에 URL 복사:', joinUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }).catch(err => {
       console.error('클립보드 복사 오류:', err);
+    }).finally(() => {
+      setCopyLoading(false);
     });
   };
 
@@ -71,8 +76,8 @@ const LadderCreated = () => {
           
           <button
             onClick={copyToClipboard}
-            disabled={!ladderId}
-            className={`w-full py-2 px-4 rounded-md font-medium transition-colors ${
+            disabled={!ladderId || copyLoading}
+            className={`w-full py-2 px-4 rounded-md font-medium transition-colors flex items-center justify-center ${
               !ladderId 
                 ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
                 : copied 
@@ -80,7 +85,17 @@ const LadderCreated = () => {
                   : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
           >
-            {copied ? '복사 완료!' : '링크 복사하기'}
+            {copyLoading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                복사 중...
+              </>
+            ) : (
+              copied ? '복사 완료!' : '링크 복사하기'
+            )}
           </button>
           
           <button

@@ -164,8 +164,8 @@ export const handler = async (event) => {
 function generateLadderResults(participants, maxParticipants) {
   console.log('결과 생성 시작:', { participants, maxParticipants });
   
-  // 참가자 수에 맞는 결과 배열 생성
-  const positions = Array.from({ length: maxParticipants }, (_, i) => i);
+  // 참가자 수에 맞는 결과 배열 생성 (1부터 시작)
+  const positions = Array.from({ length: maxParticipants }, (_, i) => i + 1);
   const shuffledPositions = shuffleArray([...positions]);
   console.log('섞인 위치:', shuffledPositions);
   
@@ -173,7 +173,7 @@ function generateLadderResults(participants, maxParticipants) {
   const results = participants.map(participant => ({
     name: participant.name,
     startPosition: participant.position,
-    endPosition: shuffledPositions[participant.position]
+    endPosition: shuffledPositions[participant.position - 1]
   }));
   
   console.log('생성된 결과:', results);

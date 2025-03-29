@@ -11,7 +11,7 @@ export const handler = async (event) => {
   try {
     console.log('요청 받음:', event);
     
-    // 파라미터 추출
+    // 요청 본문 파싱
     let body;
     try {
       body = JSON.parse(event.body || '{}');
@@ -25,15 +25,18 @@ export const handler = async (event) => {
       };
     }
     
+    // maxParticipants 파라미터 추출
     const { maxParticipants } = body;
     console.log('요청 파라미터:', { maxParticipants });
 
     // 파라미터 검증
     if (!maxParticipants || typeof maxParticipants !== 'number' || maxParticipants < 2) {
-      console.log('잘못된 maxParticipants 값:', maxParticipants);
+      console.log('유효하지 않은 파라미터:', { maxParticipants });
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: '최소 2명 이상의 참가자 수가 필요합니다.' })
+        body: JSON.stringify({ 
+          error: '참여 인원은 최소 2명 이상의 정수여야 합니다.' 
+        })
       };
     }
 
