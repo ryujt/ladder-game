@@ -107,7 +107,7 @@ export const handler = async (event) => {
     
     // 완료되었다면 사다리 결과 생성
     if (isComplete && !ladder.results) {
-      ladder.results = generateLadderResults(ladder.participants, ladder.maxParticipants);
+      ladder.results = generateLadderResults(ladder.participants, ladder.maxParticipants, ladder.resultItems);
       ladder.status = 'complete';
       console.log('생성된 결과:', ladder.results);
     }
@@ -161,8 +161,8 @@ export const handler = async (event) => {
 };
 
 // 사다리 결과 생성 함수
-function generateLadderResults(participants, maxParticipants) {
-  console.log('결과 생성 시작:', { participants, maxParticipants });
+function generateLadderResults(participants, maxParticipants, resultItems) {
+  console.log('결과 생성 시작:', { participants, maxParticipants, resultItems });
   
   // 참가자 수에 맞는 결과 배열 생성 (1부터 시작)
   const positions = Array.from({ length: maxParticipants }, (_, i) => i + 1);
@@ -170,15 +170,26 @@ function generateLadderResults(participants, maxParticipants) {
   const shuffledPositions = shuffleArray([...positions]);
   console.log('섞인 위치:', shuffledPositions);
   
+  // 결과 항목 확인 (없으면 기본값으로 번호 사용)
+  const finalResultItems = Array.isArray(resultItems) && resultItems.length === maxParticipants
+    ? resultItems
+    : Array.from({ length: maxParticipants }, (_, i) => `${i + 1}번`);
+  
+  console.log('최종 결과 항목:', finalResultItems);
+  
   // 각 참가자에게 랜덤 결과 할당
   const results = participants.map(participant => {
     // participant.position은 1부터 시작하므로 배열 인덱스로 사용시 -1 필요
     const positionIndex = participant.position - 1;
+    const resultPosition = shuffledPositions[positionIndex];
+    const resultItemIndex = resultPosition - 1; // 결과 항목 인덱스 (0부터 시작)
+    
     return {
       name: participant.name,
       startPosition: participant.position,
       // 시작 위치에 따라 섞인 결과 배열에서 할당
-      endPosition: shuffledPositions[positionIndex]
+      endPosition: resultPosition,
+      resultItem: finalResultItems[resultItemIndex] || '꽝' // 해당 위치의 결과 항목
     };
   });
   

@@ -8,10 +8,13 @@ export const API_ENDPOINTS = {
 };
 
 // 사다리 생성 API
-export const generateLadder = async (maxParticipants) => {
+export const generateLadder = async (maxParticipants, resultItems = []) => {
     try {
-        console.log('사다리 생성 요청:', { maxParticipants });
-        const response = await api.post(API_ENDPOINTS.GENERATE_LADDER, { maxParticipants });
+        console.log('사다리 생성 요청:', { maxParticipants, resultItems });
+        const response = await api.post(API_ENDPOINTS.GENERATE_LADDER, { 
+            maxParticipants,
+            resultItems
+        });
         console.log('사다리 생성 응답 전체:', response);
         console.log('사다리 생성 응답 데이터:', response.data);
         

@@ -16,12 +16,12 @@ const useLadderStore = create(
             error: null,
 
             // 사다리 생성
-            createLadder: async (maxParticipants) => {
+            createLadder: async (maxParticipants, resultItems) => {
                 try {
                     set({ error: null });
-                    console.log('사다리 생성 요청 전:', { maxParticipants });
+                    console.log('사다리 생성 요청 전:', { maxParticipants, resultItems });
                     
-                    const response = await generateLadder(maxParticipants);
+                    const response = await generateLadder(maxParticipants, resultItems);
                     console.log('사다리 생성 응답:', response);
                     
                     // API 응답 구조 확인 및 디버깅
@@ -41,10 +41,11 @@ const useLadderStore = create(
                         ladderId, 
                         participants: maxParticipants,
                         participants_joined: [],
-                        result: null
+                        result: null,
+                        resultItems: response.resultItems || Array(maxParticipants).fill('꽝')
                     });
                     
-                    console.log('상태 업데이트 후:', { ladderId, maxParticipants });
+                    console.log('상태 업데이트 후:', { ladderId, maxParticipants, resultItems: response.resultItems });
                     return ladderId;
                 } catch (error) {
                     console.error('사다리 생성 에러 (스토어):', error);

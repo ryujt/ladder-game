@@ -25,9 +25,9 @@ export const handler = async (event) => {
       };
     }
     
-    // maxParticipants 파라미터 추출
-    const { maxParticipants } = body;
-    console.log('요청 파라미터:', { maxParticipants });
+    // 파라미터 추출
+    const { maxParticipants, resultItems } = body;
+    console.log('요청 파라미터:', { maxParticipants, resultItems });
 
     // 파라미터 검증
     if (!maxParticipants || typeof maxParticipants !== 'number' || maxParticipants < 2) {
@@ -39,6 +39,20 @@ export const handler = async (event) => {
         })
       };
     }
+    
+    // 결과 항목 검증 및 처리
+    const sanitizedResultItems = Array.isArray(resultItems) ? 
+      resultItems.slice(0, maxParticipants).map(item => item || '꽝') : 
+      Array(maxParticipants).fill('꽝');
+    
+    if (sanitizedResultItems.length < maxParticipants) {
+      // 결과 항목이 부족한 경우 '꽝'으로 채움
+      while (sanitizedResultItems.length < maxParticipants) {
+        sanitizedResultItems.push('꽝');
+      }
+    }
+    
+    console.log('정제된 결과 항목:', sanitizedResultItems);
 
     // 새 사다리 ID 생성
     const ladderId = generateId();
@@ -51,7 +65,8 @@ export const handler = async (event) => {
       status: 'waiting', // waiting, in-progress, complete
       createdAt: new Date().toISOString(),
       participants: [], // 참가자 배열
-      results: null     // 게임 결과
+      results: null,    // 게임 결과
+      resultItems: sanitizedResultItems // 결과 항목 배열
     };
     console.log('생성할 사다리 게임 데이터:', newLadder);
 
@@ -71,6 +86,7 @@ export const handler = async (event) => {
       maxParticipants,
       status: 'waiting',
       participants: [],
+      resultItems: sanitizedResultItems,
       success: true
     };
     console.log('응답 데이터:', responseData);

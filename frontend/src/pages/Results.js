@@ -176,7 +176,8 @@ const Results = () => {
   const participantPositions = result.map(item => ({
     name: item.name,
     startPosition: item.startPosition,
-    endPosition: item.endPosition
+    endPosition: item.endPosition,
+    resultItem: item.resultItem || `${item.endPosition}번`
   })).sort((a, b) => a.startPosition - b.startPosition);
   
   // 사다리 게임 선 패스 생성
@@ -244,7 +245,7 @@ const Results = () => {
                 )}
               </div>
               
-              {/* 결과 번호 */}
+              {/* 결과 내용 */}
               <div className="absolute bottom-0 left-0 right-0 h-10 flex">
                 {participantPositions.map((item, idx) => (
                   <div 
@@ -252,10 +253,10 @@ const Results = () => {
                     className="flex-1 text-center flex flex-col"
                   >
                     <div className="text-xs font-normal text-green-800">
-                      결과: {item.endPosition}
+                      결과
                     </div>
                     <div className="h-8 flex items-center justify-center bg-green-200 rounded-b-lg mx-1">
-                      <span className="font-medium">{item.endPosition}번</span>
+                      <span className="font-medium">{item.resultItem}</span>
                     </div>
                   </div>
                 ))}
@@ -274,7 +275,7 @@ const Results = () => {
                   <div>
                     <span className="font-medium text-blue-600">{item.name}</span>
                     <span className="text-gray-500 mx-2">→</span>
-                    <span className="font-medium">{item.endPosition}</span>
+                    <span className="font-medium">{item.resultItem}</span>
                   </div>
                   <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
                     {item.startPosition}번

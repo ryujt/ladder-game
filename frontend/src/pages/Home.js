@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useLadderStore from '../stores/ladderStore';
 
@@ -6,14 +6,55 @@ const Home = () => {
   const navigate = useNavigate();
   const { createLadder } = useLadderStore();
   const [formData, setFormData] = useState({
-    maxParticipants: 2
+    maxParticipants: 2,
+    resultItems: Array(2).fill('꽝')
   });
   const [isLoading, setIsLoading] = useState(false);
   
+  // 참가자 수 변경 시 결과 항목 배열도 업데이트
+  useEffect(() => {
+    const adjustResultItems = () => {
+      const currentCount = formData.resultItems.length;
+      const targetCount = formData.maxParticipants;
+      
+      if (currentCount < targetCount) {
+        // 부족한 항목 추가 (기본값 '꽝')
+        setFormData(prev => ({
+          ...prev,
+          resultItems: [
+            ...prev.resultItems,
+            ...Array(targetCount - currentCount).fill('꽝')
+          ]
+        }));
+      } else if (currentCount > targetCount) {
+        // 초과 항목 제거
+        setFormData(prev => ({
+          ...prev,
+          resultItems: prev.resultItems.slice(0, targetCount)
+        }));
+      }
+    };
+    
+    adjustResultItems();
+  }, [formData.maxParticipants]);
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const parsedValue = name === 'maxParticipants' ? parseInt(value, 10) : value;
-    setFormData(prev => ({ ...prev, [name]: parsedValue }));
+    
+    if (name === 'maxParticipants') {
+      const parsedValue = parseInt(value, 10);
+      setFormData(prev => ({ ...prev, [name]: parsedValue }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+  
+  const handleResultItemChange = (index, value) => {
+    setFormData(prev => {
+      const updatedItems = [...prev.resultItems];
+      updatedItems[index] = value || '꽝'; // 빈 값이면 '꽝'으로 설정
+      return { ...prev, resultItems: updatedItems };
+    });
   };
   
   const handleSubmit = async (e) => {
@@ -22,7 +63,7 @@ const Home = () => {
     
     try {
       setIsLoading(true);
-      const result = await createLadder(formData.maxParticipants);
+      const result = await createLadder(formData.maxParticipants, formData.resultItems);
       console.log('생성된 사다리 ID:', result);
       
       // 결과 처리 - 문자열 및 객체 형태 모두 지원
@@ -70,6 +111,32 @@ const Home = () => {
               ))}
             </select>
             <p className="mt-1 text-sm text-gray-500">참가할 인원 수를 선택하세요</p>
+          </div>
+          
+          <div className="space-y-4">
+            <label className="block text-sm font-medium text-gray-700">
+              결과 항목 설정
+            </label>
+            <div className="grid grid-cols-2 gap-4">
+              {formData.resultItems.map((item, index) => (
+                <div key={index} className="flex flex-col">
+                  <label htmlFor={`result-${index}`} className="text-xs text-gray-500 mb-1">
+                    {index + 1}번 결과
+                  </label>
+                  <input
+                    id={`result-${index}`}
+                    type="text"
+                    value={item}
+                    onChange={(e) => handleResultItemChange(index, e.target.value)}
+                    placeholder="꽝"
+                    className="border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500">
+              각 위치에 표시될 결과를 입력하세요. 미입력시 '꽝'으로 표시됩니다.
+            </p>
           </div>
           
           <div>
