@@ -94,24 +94,30 @@ const useLadderStore = create(
                     const isComplete = response.isComplete || false;
                     const results = response.results || null;
                     const participants = response.participants || [];
+                    const maxParticipants = response.maxParticipants || 0;
                     
                     // 결과 데이터 설정
                     if (isComplete && results) {
                         set({ 
                             result: results,
-                            participants_joined: participants
+                            participants_joined: participants,
+                            participants: maxParticipants
                         });
                         console.log('완료된 결과 업데이트:', results);
                     } else {
-                        set({ participants_joined: participants });
-                        console.log('진행 중 상태 업데이트:', { participants });
+                        set({ 
+                            participants_joined: participants,
+                            participants: maxParticipants 
+                        });
+                        console.log('진행 중 상태 업데이트:', { participants, maxParticipants });
                     }
                     
                     return { 
                         success: true, 
                         isComplete,
                         data: results,
-                        participants
+                        participants,
+                        maxParticipants
                     };
                 } catch (error) {
                     console.error('결과 확인 에러 (스토어):', error);

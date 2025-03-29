@@ -33,7 +33,7 @@ const LadderJoin = () => {
         // 최대 참가자 수 설정 디버깅
         console.log('maxParticipants 값:', result.maxParticipants, typeof result.maxParticipants);
         
-        if (result.maxParticipants) {
+        if (result.maxParticipants && result.maxParticipants > 0) {
           setMaxParticipants(result.maxParticipants);
           console.log('최대 참가자 수 설정 완료:', result.maxParticipants);
         } else {

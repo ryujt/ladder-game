@@ -88,6 +88,19 @@ export const getLadderResult = async (ladderId) => {
         console.log('사다리 결과 확인 응답 전체:', response);
         console.log('사다리 결과 확인 응답 데이터:', response.data);
         
+        // 자세한 디버깅을 위한 응답 데이터 세부 검사
+        if (response.data) {
+          console.log('응답 데이터 세부 정보:', {
+            id: response.data.id,
+            status: response.data.status,
+            maxParticipants: response.data.maxParticipants,
+            currentParticipants: response.data.currentParticipants,
+            participants: response.data.participants?.length || 0,
+            results: response.data.results ? '있음' : '없음',
+            isComplete: response.data.isComplete
+          });
+        }
+        
         // 응답 데이터가 문자열인 경우 JSON으로 파싱
         let parsedData;
         if (typeof response.data === 'string') {

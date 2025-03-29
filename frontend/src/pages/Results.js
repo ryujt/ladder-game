@@ -131,16 +131,142 @@ const Results = () => {
     );
   }
 
+  // 빈 경로 배열 초기화 - 사다리 경로를 시뮬레이션하기 위한 무작위 선 생성
+  const generateLadderPaths = (totalParticipants) => {
+    // 각 참가자 위치 사이의 가로선 갯수 (7~10개)
+    const horizontalLinesCount = 7 + Math.floor(Math.random() * 4); 
+    
+    // 가로선 위치 배열 (세로축 상의 위치)
+    const positions = Array.from({ length: horizontalLinesCount }, (_, i) => ({
+      position: 10 + Math.floor((i + 1) * (80 / (horizontalLinesCount + 1))),
+      connections: []
+    }));
+    
+    // 각 선의 위치에서 어떤 세로선끼리 연결될지 결정
+    positions.forEach(pos => {
+      // 서로 다른 두 개의 임의의 인접 세로선 선택
+      const availableCols = Array.from({ length: totalParticipants - 1 }, (_, i) => i);
+      
+      // 1~3개의 가로선 추가 (위치마다 다르게)
+      const linesToAdd = 1 + Math.floor(Math.random() * Math.min(2, availableCols.length));
+      
+      for (let i = 0; i < linesToAdd; i++) {
+        if (availableCols.length === 0) break;
+        
+        const randomIdx = Math.floor(Math.random() * availableCols.length);
+        const col = availableCols[randomIdx];
+        
+        // 같은 위치에 중복 선을 방지하기 위해 사용한 위치와 인접 위치 제거
+        availableCols.splice(randomIdx, 1);
+        if (availableCols.includes(col - 1)) {
+          availableCols.splice(availableCols.indexOf(col - 1), 1);
+        }
+        if (availableCols.includes(col + 1)) {
+          availableCols.splice(availableCols.indexOf(col + 1), 1);
+        }
+        
+        pos.connections.push(col);
+      }
+    });
+    
+    return positions;
+  };
+  
+  // 모든 참가자의 시작과 종료 위치 배열 생성
+  const participantPositions = result.map(item => ({
+    name: item.name,
+    startPosition: item.startPosition,
+    endPosition: item.endPosition
+  })).sort((a, b) => a.startPosition - b.startPosition);
+  
+  // 사다리 게임 선 패스 생성
+  const ladderPaths = generateLadderPaths(participantPositions.length);
+
   // 결과 화면
   console.log('결과 표시:', result);
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-md p-8 max-w-3xl w-full">
+      <div className="bg-white rounded-lg shadow-md p-8 max-w-5xl w-full">
         <h1 className="text-3xl font-bold text-center text-blue-600 mb-8">사다리 결과</h1>
         
+        <div className="mb-10">
+          {/* 사다리 게임 시각화 */}
+          <div className="relative w-full bg-gray-50 rounded-lg p-3 border border-gray-200">
+            <div className="relative w-full h-[380px]">
+              {/* 참가자 이름/시작 위치 */}
+              <div className="absolute top-0 left-0 right-0 h-10 flex">
+                {participantPositions.map((item, idx) => (
+                  <div 
+                    key={`start-${idx}`} 
+                    className="flex-1 text-center font-bold flex flex-col"
+                  >
+                    <div className="h-8 flex items-center justify-center bg-blue-200 rounded-t-lg mx-1 overflow-hidden">
+                      <span>{item.name}</span>
+                    </div>
+                    <div className="text-xs font-normal text-blue-800">
+                      {item.startPosition}번
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* 사다리 선 */}
+              <div className="absolute top-10 left-0 right-0 bottom-10">
+                {/* 세로선 */}
+                {participantPositions.map((_, idx) => {
+                  const colPosition = (100 / participantPositions.length) * (idx + 0.5);
+                  return (
+                    <div
+                      key={`col-${idx}`}
+                      style={{ left: `${colPosition}%` }}
+                      className="absolute top-0 bottom-0 w-[2px] bg-blue-400"
+                    ></div>
+                  )
+                })}
+                
+                {/* 가로선 */}
+                {ladderPaths.map((pathRow, rowIdx) => 
+                  pathRow.connections.map((colIdx, idx) => {
+                    const leftCol = (100 / participantPositions.length) * (colIdx + 0.5);
+                    const rightCol = (100 / participantPositions.length) * (colIdx + 1.5);
+                    return (
+                      <div
+                        key={`row-${rowIdx}-${idx}`}
+                        style={{
+                          left: `${leftCol}%`,
+                          top: `${pathRow.position}%`,
+                          width: `${rightCol - leftCol}%`,
+                        }}
+                        className="absolute h-[2px] bg-blue-500"
+                      ></div>
+                    );
+                  })
+                )}
+              </div>
+              
+              {/* 결과 번호 */}
+              <div className="absolute bottom-0 left-0 right-0 h-10 flex">
+                {participantPositions.map((item, idx) => (
+                  <div 
+                    key={`end-${idx}`} 
+                    className="flex-1 text-center flex flex-col"
+                  >
+                    <div className="text-xs font-normal text-green-800">
+                      결과: {item.endPosition}
+                    </div>
+                    <div className="h-8 flex items-center justify-center bg-green-200 rounded-b-lg mx-1">
+                      <span className="font-medium">{item.endPosition}번</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* 최종 결과 테이블 */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">최종 결과</h2>
-          
           <div className="bg-gray-100 rounded-lg p-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {result.map((item, idx) => (

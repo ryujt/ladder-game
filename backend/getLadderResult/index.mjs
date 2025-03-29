@@ -95,6 +95,7 @@ export const handler = async (event) => {
       success: true
     };
     console.log('응답 데이터:', responseData);
+    console.log('응답 상세 정보 - maxParticipants:', ladder.maxParticipants, '타입:', typeof ladder.maxParticipants);
 
     return {
       statusCode: 200,
