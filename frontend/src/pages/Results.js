@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import useLadderStore from '../stores/ladderStore';
 import { useLoadingStore } from '../stores/loadingStore';
+import { Button, Card, LoadingSpinner } from '../components/ui';
+import { LadderCanvas, ResultCard } from '../components/ladder';
 
 const Results = () => {
   const { id: ladderId } = useParams();
@@ -9,305 +12,172 @@ const Results = () => {
   const { checkResult, result, error, participants_joined } = useLadderStore();
   const { isLoading } = useLoadingStore();
   const [pollingActive, setPollingActive] = useState(false);
-  const [navigateLoading, setNavigateLoading] = useState(false);
-  
-  console.log('Results 페이지 렌더링:', { ladderId, result, participants: participants_joined?.length });
 
-  // 초기 데이터 로딩
   useEffect(() => {
     const initialLoad = async () => {
       try {
-        console.log('결과 페이지 초기 데이터 로딩');
         const resultData = await checkResult(ladderId);
-        console.log('초기 결과 데이터:', resultData);
-        
-        // 참가자가 있으면 폴링 활성화
+
         if (resultData.participants && resultData.participants.length > 0) {
-          console.log('참가자가 있어 폴링 활성화');
           setPollingActive(true);
         }
       } catch (err) {
-        console.error('초기 결과 로딩 오류:', err);
+        // Error handled by store
       }
     };
-    
+
     initialLoad();
   }, [ladderId, checkResult]);
 
-  // 폴링 설정
   useEffect(() => {
-    // 폴링이 비활성화되어 있으면 타이머를 설정하지 않음
     if (!pollingActive) {
-      console.log('폴링이 비활성화되어 있어 타이머 미설정');
-      return () => {};
+      return;
     }
-    
-    console.log('결과 폴링 시작 - 5초 간격');
+
     const fetchResult = async () => {
       try {
-        console.log('결과 확인 폴링 중...');
         const resultData = await checkResult(ladderId);
-        console.log('폴링 결과:', { 
-          isComplete: resultData.isComplete, 
-          participants: resultData.participants?.length,
-          hasResults: !!resultData.data
-        });
-        
-        // 결과가 있고 complete 상태이면 폴링 중단
+
         if (resultData.isComplete && resultData.data) {
-          console.log('게임이 완료되어 폴링 중단');
           setPollingActive(false);
         }
       } catch (err) {
-        console.error('결과 확인 폴링 오류:', err);
+        // Silent fail for polling
       }
     };
-    
-    // 5초마다 결과 업데이트 확인
+
     const intervalId = setInterval(fetchResult, 5000);
-    
-    return () => {
-      console.log('결과 폴링 중단');
-      clearInterval(intervalId);
-    };
+    return () => clearInterval(intervalId);
   }, [ladderId, checkResult, pollingActive]);
 
   const handleNewGame = () => {
-    console.log('새 게임 시작하기 클릭');
-    setNavigateLoading(true);
     navigate('/');
   };
 
-  // 결과가 없고 에러도 없는 경우 - 대기 중 화면
   if (!result && !error) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
-          <h1 className="text-3xl font-bold text-blue-600 mb-4">결과 기다리는 중...</h1>
-          <p className="text-gray-600 mb-6">
-            모든 참가자가 참여할 때까지 기다리고 있습니다.
-            {participants_joined?.length > 0 && ` (현재 ${participants_joined.length}명 참가)`}
-          </p>
-          <div className="animate-pulse flex justify-center">
-            <div className="h-4 w-32 bg-blue-200 rounded"></div>
-          </div>
-          
-          {isLoading && (
-            <div className="mt-4 text-sm text-blue-600">
-              데이터 업데이트 중...
-            </div>
-          )}
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md"
+        >
+          <Card>
+            <Card.Body className="p-8 text-center">
+              <h1 className="text-2xl font-bold text-primary-600 mb-4">
+                결과 기다리는 중...
+              </h1>
+              <p className="text-gray-600 mb-6">
+                모든 참가자가 참여할 때까지 기다리고 있습니다.
+                {participants_joined?.length > 0 &&
+                  ` (현재 ${participants_joined.length}명 참가)`}
+              </p>
+              <div className="flex justify-center">
+                <LoadingSpinner size="lg" />
+              </div>
+              {isLoading && (
+                <p className="mt-4 text-sm text-primary-500">
+                  데이터 업데이트 중...
+                </p>
+              )}
+            </Card.Body>
+          </Card>
+        </motion.div>
       </div>
     );
   }
 
-  // 에러 화면
   if (error) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
-          <h1 className="text-3xl font-bold text-red-600 mb-4">오류 발생</h1>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <button
-            onClick={handleNewGame}
-            disabled={navigateLoading}
-            className="bg-blue-600 text-white font-medium py-2 px-4 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center mx-auto"
-          >
-            {navigateLoading ? (
-              <>
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md"
+        >
+          <Card>
+            <Card.Body className="p-8 text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-error-100 mb-4">
+                <svg
+                  className="w-8 h-8 text-error-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
-                이동 중...
-              </>
-            ) : (
-              '새 게임 시작하기'
-            )}
-          </button>
-        </div>
+              </div>
+              <h1 className="text-2xl font-bold text-error-600 mb-4">
+                오류 발생
+              </h1>
+              <p className="text-gray-600 mb-6">{error}</p>
+              <Button onClick={handleNewGame}>새 게임 시작하기</Button>
+            </Card.Body>
+          </Card>
+        </motion.div>
       </div>
     );
   }
 
-  // 빈 경로 배열 초기화 - 사다리 경로를 시뮬레이션하기 위한 무작위 선 생성
-  const generateLadderPaths = (totalParticipants) => {
-    // 각 참가자 위치 사이의 가로선 갯수 (7~10개)
-    const horizontalLinesCount = 7 + Math.floor(Math.random() * 4); 
-    
-    // 가로선 위치 배열 (세로축 상의 위치)
-    const positions = Array.from({ length: horizontalLinesCount }, (_, i) => ({
-      position: 10 + Math.floor((i + 1) * (80 / (horizontalLinesCount + 1))),
-      connections: []
-    }));
-    
-    // 각 선의 위치에서 어떤 세로선끼리 연결될지 결정
-    positions.forEach(pos => {
-      // 서로 다른 두 개의 임의의 인접 세로선 선택
-      const availableCols = Array.from({ length: totalParticipants - 1 }, (_, i) => i);
-      
-      // 1~3개의 가로선 추가 (위치마다 다르게)
-      const linesToAdd = 1 + Math.floor(Math.random() * Math.min(2, availableCols.length));
-      
-      for (let i = 0; i < linesToAdd; i++) {
-        if (availableCols.length === 0) break;
-        
-        const randomIdx = Math.floor(Math.random() * availableCols.length);
-        const col = availableCols[randomIdx];
-        
-        // 같은 위치에 중복 선을 방지하기 위해 사용한 위치와 인접 위치 제거
-        availableCols.splice(randomIdx, 1);
-        if (availableCols.includes(col - 1)) {
-          availableCols.splice(availableCols.indexOf(col - 1), 1);
-        }
-        if (availableCols.includes(col + 1)) {
-          availableCols.splice(availableCols.indexOf(col + 1), 1);
-        }
-        
-        pos.connections.push(col);
-      }
-    });
-    
-    return positions;
-  };
-  
-  // 모든 참가자의 시작과 종료 위치 배열 생성
-  const participantPositions = result.map(item => ({
-    name: item.name,
-    startPosition: item.startPosition,
-    endPosition: item.endPosition,
-    resultItem: item.resultItem || `${item.endPosition}번`
-  })).sort((a, b) => a.startPosition - b.startPosition);
-  
-  // 사다리 게임 선 패스 생성
-  const ladderPaths = generateLadderPaths(participantPositions.length);
+  const participantPositions = result
+    .map((item) => ({
+      name: item.name,
+      startPosition: item.startPosition,
+      endPosition: item.endPosition,
+      resultItem: item.resultItem || `${item.endPosition}번`,
+    }))
+    .sort((a, b) => a.startPosition - b.startPosition);
 
-  // 결과 화면
-  console.log('결과 표시:', result);
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-md p-8 max-w-5xl w-full">
-        <h1 className="text-3xl font-bold text-center text-blue-600 mb-8">사다리 결과</h1>
-        
-        <div className="mb-10">
-          {/* 사다리 게임 시각화 */}
-          <div className="relative w-full bg-gray-50 rounded-lg p-3 border border-gray-200">
-            <div className="relative w-full h-[380px]">
-              {/* 참가자 이름/시작 위치 */}
-              <div className="absolute top-0 left-0 right-0 h-10 flex">
-                {participantPositions.map((item, idx) => (
-                  <div 
-                    key={`start-${idx}`} 
-                    className="flex-1 text-center font-bold flex flex-col"
-                  >
-                    <div className="h-8 flex items-center justify-center bg-blue-200 rounded-t-lg mx-1 overflow-hidden">
-                      <span>{item.name}</span>
-                    </div>
-                    <div className="text-xs font-normal text-blue-800">
-                      {item.startPosition}번
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              {/* 사다리 선 */}
-              <div className="absolute top-10 left-0 right-0 bottom-10">
-                {/* 세로선 */}
-                {participantPositions.map((_, idx) => {
-                  const colPosition = (100 / participantPositions.length) * (idx + 0.5);
-                  return (
-                    <div
-                      key={`col-${idx}`}
-                      style={{ left: `${colPosition}%` }}
-                      className="absolute top-0 bottom-0 w-[2px] bg-blue-400"
-                    ></div>
-                  )
-                })}
-                
-                {/* 가로선 */}
-                {ladderPaths.map((pathRow, rowIdx) => 
-                  pathRow.connections.map((colIdx, idx) => {
-                    const leftCol = (100 / participantPositions.length) * (colIdx + 0.5);
-                    const rightCol = (100 / participantPositions.length) * (colIdx + 1.5);
-                    return (
-                      <div
-                        key={`row-${rowIdx}-${idx}`}
-                        style={{
-                          left: `${leftCol}%`,
-                          top: `${pathRow.position}%`,
-                          width: `${rightCol - leftCol}%`,
-                        }}
-                        className="absolute h-[2px] bg-blue-500"
-                      ></div>
-                    );
-                  })
-                )}
-              </div>
-              
-              {/* 결과 내용 */}
-              <div className="absolute bottom-0 left-0 right-0 h-10 flex">
-                {participantPositions.map((item, idx) => (
-                  <div 
-                    key={`end-${idx}`} 
-                    className="flex-1 text-center flex flex-col"
-                  >
-                    <div className="text-xs font-normal text-green-800">
-                      결과
-                    </div>
-                    <div className="h-8 flex items-center justify-center bg-green-200 rounded-b-lg mx-1">
-                      <span className="font-medium">{item.resultItem}</span>
-                    </div>
-                  </div>
+    <div className="min-h-screen bg-gray-100 py-8 px-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
+        className="max-w-5xl mx-auto"
+      >
+        <Card className="mb-8">
+          <Card.Body className="p-6 sm:p-8">
+            <h1 className="text-3xl font-bold text-center text-primary-600 mb-8">
+              사다리 결과
+            </h1>
+
+            <div className="mb-8">
+              <LadderCanvas participants={participantPositions} height={380} />
+            </div>
+
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                최종 결과
+              </h2>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                {result.map((item, idx) => (
+                  <ResultCard
+                    key={idx}
+                    name={item.name}
+                    position={item.startPosition}
+                    result={item.resultItem || `${item.endPosition}번`}
+                    delay={idx * 0.1}
+                  />
                 ))}
               </div>
             </div>
-          </div>
-        </div>
-        
-        {/* 최종 결과 테이블 */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">최종 결과</h2>
-          <div className="bg-gray-100 rounded-lg p-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {result.map((item, idx) => (
-                <div key={idx} className="bg-white p-4 rounded shadow-sm flex justify-between items-center">
-                  <div>
-                    <span className="font-medium text-blue-600">{item.name}</span>
-                    <span className="text-gray-500 mx-2">→</span>
-                    <span className="font-medium">{item.resultItem}</span>
-                  </div>
-                  <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
-                    {item.startPosition}번
-                  </div>
-                </div>
-              ))}
+
+            <div className="flex justify-center">
+              <Button onClick={handleNewGame} size="lg">
+                새 게임 시작하기
+              </Button>
             </div>
-          </div>
-        </div>
-        
-        <div className="flex justify-center">
-          <button
-            onClick={handleNewGame}
-            disabled={navigateLoading}
-            className="bg-blue-600 text-white font-medium py-2 px-6 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
-          >
-            {navigateLoading ? (
-              <>
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                이동 중...
-              </>
-            ) : (
-              '새 게임 시작하기'
-            )}
-          </button>
-        </div>
-      </div>
+          </Card.Body>
+        </Card>
+      </motion.div>
     </div>
   );
 };
 
-export default Results; 
+export default Results;
